@@ -1,0 +1,12 @@
+services:
+  postgres:
+    container_name: pub-express-rest-pg
+    image: postgres:16.3
+    ports:
+      - '5432:5432'
+    volumes:
+      - /pub-express-rest-pg/data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: restdemo_user
+      POSTGRES_PASSWORD: restdemo_pass
+      POSTGRES_DB: restdemo
