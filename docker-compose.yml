@@ -5,7 +5,7 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - /pub-express-rest-pg/data:/var/lib/postgresql/data
+      - /tmp/pub-express-rest-pg/data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: restdemo_user
       POSTGRES_PASSWORD: restdemo_pass

@@ -1,0 +1,31 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CmnUser {
+  id    String  @id @default(uuid())  @db.VarChar(64) // 아이디, UUID = 36자리
+  name String  @db.VarChar(64) // 이름
+  mail String  @unique @db.VarChar(64) // 이메일
+  nckn  String? @db.VarChar(64) // 닉네임
+  celPhn  String? @db.VarChar(16) @map("cel_phn") // 휴대전화
+  pswr  String @db.VarChar(64) // 패스워드
+  useYn  String @db.Char(1) @default("Y") @map("use_yn")// 사용여부
+  rgstId  String @db.VarChar(64) @default("SYSTEM") @map("rgst_id")// 등록자아이디
+  rgstDate DateTime  @default(now()) @db.Timestamptz(3) @map("rgst_date") // 등록일
+  mdfrId  String @db.VarChar(64) @default("SYSTEM") @map("mdfr_id") // 수정자아이디
+  mdfcDate  DateTime  @updatedAt @db.Timestamptz(3) @map("mdfc_date")// 수정일
+
+  @@map("cmn_user") // 공통 사용자
+}
+

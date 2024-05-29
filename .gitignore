@@ -131,3 +131,6 @@ dist
 
 docker/postgresql/data/*
 !docker/postgresql/data/.gitkeep
+
+# wonsama
+package-lock.json
