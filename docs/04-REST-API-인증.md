@@ -94,3 +94,10 @@ app.get(
   },
 );
 ```
+
+## 참조링크
+
+- [passport + JWT를 활용한 로그인 구현](https://velog.io/@pixelstudio/passport-JWT%EB%A5%BC-%ED%99%9C%EC%9A%A9%ED%95%9C-%EB%A1%9C%EA%B7%B8%EC%9D%B8-%EA%B5%AC%ED%98%84)
+- [expressjs : routing](https://expressjs.com/en/guide/routing.html)
+- [Express + Typescript 환경 구축하기](https://velog.io/@brgndy/Express-Typescript-%ED%99%98%EA%B2%BD-%EA%B5%AC%EC%B6%95%ED%95%98%EA%B8%B0)
+- [`[express.js] 누구나 시작할 수 있는! typescript로 express.js 세팅하기 (+Eslint, Prettier)`](https://velog.io/@gyulhana/express.js-%EB%88%84%EA%B5%AC%EB%82%98-%EC%8B%9C%EC%9E%91%ED%95%A0-%EC%88%98-%EC%9E%88%EB%8A%94-typescript%EB%A1%9C-express.js-%EC%84%B8%ED%8C%85%ED%95%98%EA%B8%B0-Eslint-Prettier)
