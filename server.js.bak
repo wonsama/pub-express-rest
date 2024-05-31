@@ -2,7 +2,8 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import express from 'express';
-import { fileURLToPath } from 'url'; // const path = require('path');
+import { fileURLToPath } from 'url';
+// const path = require('path');
 import path from 'path';
 dotenv.config();
 

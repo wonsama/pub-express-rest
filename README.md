@@ -36,12 +36,15 @@ REST API 서버를 손쉽게 구축하기 위한 TEMPLATE 프로젝트
 
 ## 참조링크
 
-1. [Nodejs](https://nodejs.org/ko/)
-2. [Express](https://expressjs.com/ko/)
-3. [Postgresql](https://www.postgresql.org/)
-4. [Prisma](https://www.prisma.io/)
-5. [REST API](https://restfulapi.net/)
-6. [JWT](https://jwt.io/)
-7. [Docker](https://www.docker.com/)
-8. [Google Sheet](https://www.google.com/sheets/about/)
-9. [Node Express - Swagger 연동](https://velog.io/@yongh8445/Node-Express-Swagger-%EC%97%B0%EB%8F%99)
+- [Nodejs](https://nodejs.org/ko/)
+- [Express](https://expressjs.com/ko/)
+- [Postgresql](https://www.postgresql.org/)
+- [Prisma](https://www.prisma.io/)
+- [REST API](https://restfulapi.net/)
+- [JWT](https://jwt.io/)
+- [Docker](https://www.docker.com/)
+- [Google Sheet](https://www.google.com/sheets/about/)
+- [Node Express - Swagger 연동](https://velog.io/@yongh8445/Node-Express-Swagger-%EC%97%B0%EB%8F%99)
+
+- [ejs vs handlebars vs pug(jade)](https://medium.com/@sonky740/ejs-vs-handlebars-vs-pug-jade-1592efedae8c)
+- [next의 사용법](https://velog.io/@yjs_177076/next%EC%9D%98-%EC%82%AC%EC%9A%A9%EB%B2%95)
