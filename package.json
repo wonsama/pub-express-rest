@@ -2,14 +2,19 @@
   "name": "pub-express-rest",
   "version": "1.0.0",
   "description": "express rest api",
-  "main": "server.js",
+  "main": "./src/app.js",
   "type": "module",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/app.js"
+    "db:rm": "docker compose rm db-local-dev -s -f -v",
+    "db:up": "docker compose up db-local-dev -d",
+    "db:migrate": "dotenv -e .env.local -- prisma migrate dev --name local-dev",
+    "db:generate": "dotenv -e .env.local -- prisma generate",
+    "db:reset": "npm run db:rm && npm run db:up && sleep 1 && npm run db:migrate && npm run db:generate",
+    "db:update": "npm run db:migrate && npm run db:generate",
+    "local": "dotenv -e .env.local -- nodemon ./src/app.js"
   },
   "keywords": [],
   "author": "",
@@ -18,9 +23,11 @@
     "@prisma/client": "^5.14.0",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "dotenv-cli": "^7.4.2"
   },
   "devDependencies": {
+    "nodemon": "^3.1.2",
     "prisma": "^5.14.0"
   }
 }

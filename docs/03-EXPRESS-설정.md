@@ -1,23 +1,83 @@
-# 03-REST-API-기본
+# 03-EXPRESS-설정
 
 ## 목표
 
 ```tree
-3. REST API 기본
-   1. EXPRESS 설치
-   2. PRISMA 설치
-   3. 사용자 정보 조회
+3. EXPRESS 설정
+   1. EXPRESS 구성 및 설치
+   2. EXPRESS 미들웨어
+   3. PRISMA 설치 및 테이블 생성
 ```
 
-## EXPRESS 설치
+## 3.1. EXPRESS 구성 및 설치
+
+### 3.1.1. EXPRESS 설치
+
+REST API 서버를 구축하기 위한 EXPRESS 프레임워크 설치
 
 ```bash
-npm install express
+# 의존성 설치
+npm i express bcrypt @prisma/client dotenv dotenv-cli
+npm i --save-dev nodemon prisma
 ```
 
-## EXPRESS MIDDLEWARE
+### 3.1.2. 폴더 구성
 
-Express 미들웨어 모듈
+주요 폴더 정보
+
+- public : 정적 파일을 저장하는 폴더
+- views : ejs 파일을 저장하는 폴더
+- src : 소스 파일을 저장하는 폴더
+- src/controllers : 컨트롤러 파일을 저장하는 폴더
+- src/models : 모델 파일을 저장하는 폴더
+- src/routes : 라우터 파일을 저장하는 폴더
+- src/middleware : 미들웨어 파일을 저장하는 폴더
+- src/utils : 유틸리티 파일을 저장하는 폴더
+- src/config : 설정 파일을 저장하는 폴더
+
+```tree
+my-app/
+├── node_modules/
+├── src/
+│   ├── controllers/
+│   │   ├── userController.js
+│   │   └── productController.js
+│   ├── models/
+│   │   ├── User.js
+│   │   └── Product.js
+│   ├── routes/
+│   │   ├── userRoutes.js
+│   │   └── productRoutes.js
+│   ├── middleware/
+│   │   ├── authMiddleware.js
+│   │   └── errorMiddleware.js
+│   ├── utils/
+│   │   └── utils.js
+│   ├── config/
+│   │   └── config.js
+│   └── app.js
+├── public/
+│   ├── css/
+│   │   └── styles.css
+│   ├── js/
+│   │   └── main.js
+│   └── index.html
+├── views/
+│   ├── partials/
+│   │   ├── header.ejs
+│   │   └── footer.ejs
+│   ├── users/
+│   │   ├── profile.ejs
+│   │   └── login.ejs
+│   ├── products/
+│   │   ├── list.ejs
+│   │   └── details.ejs
+│   └── index.ejs
+├── .env.local
+├── package.json
+```
+
+## 3.2. EXPRESS 미들웨어
 
 - 미들웨어 모듈
 - 데이터 파싱 : body-parser 미들웨어
@@ -31,7 +91,9 @@ Express 미들웨어 모듈
 - 코드 실행 시간 측정 : response-time 미들웨어
 - 타임아웃 설정 : connect-timeout 미들웨어
 
-## PRISMA 설치
+## 3.3. PRISMA 설치 및 테이블 생성
+
+### 3.3.1. PRISMA 설치
 
 Prisma는 이러한 도구들로 구성된 차세대 ORM입니다.
 
@@ -52,7 +114,7 @@ npm install @prisma/client
 npx prisma init --datasource-provider postgresql
 ```
 
-### PRISMA SCHEMA 생성
+### 3.3.2. PRISMA SCHEMA 생성
 
 1. 기존 데이터베이스를 가리키도록 `.env` 파일의 `DATABASE_URL` 을 설정합니다. 데이터베이스에 아직 테이블이 없다면 [https://pris.ly/d/getting-started](https://pris.ly/d/getting-started) 를 읽어보세요.
 2. `prisma db pull` 을 실행하여 데이터베이스 스키마를 Prisma 스키마로 전환합니다.
@@ -64,7 +126,7 @@ npx prisma init --datasource-provider postgresql
 npx prisma generate
 ````
 
-### PRISMA MIGRATE 생성
+### 3.3.3. PRISMA MIGRATION
 
 > 최초 DB에 `_prisma_migrations` 테이블이 생성되고, 마이그레이션 파일이 생성됩니다.
 
@@ -80,97 +142,6 @@ npx prisma migrate deploy --preview-feature
 
 # 마이그레이션 파일을 생성하고 DB에 반영 (STEP 1/2, 2/2 를 포함)
 npx prisma migrate dev --preview-feature
-```
-
-## schema.prisma
-
-> [gsheet](https://docs.google.com/spreadsheets/d/1WGvfLKJqnhiqzotDG_pZtTsafIikOlcWGp0XOdLn8Ao/edit?usp=sharing) 에서 작성한 사용자 정보를 참조하여 model 생성
-
-```prisma
-model CmnUser {
-  id    String  @id @default(uuid())  @db.VarChar(32) // 아이디
-  name String  @db.VarChar(64) // 이름
-  mail String  @unique @db.VarChar(64) // 이메일
-  nckn  String? @db.VarChar(64) // 닉네임
-  celPhn  String? @db.VarChar(16) @map("cel_phn") // 휴대전화
-  pswr  String @db.VarChar(64) // 패스워드
-  useYn  String @db.Char(1) @default("Y") @map("use_yn")// 사용여부
-  rgstId  String @db.VarChar(32) @default("SYSTEM") @map("rgst_id")// 등록자아이디
-  rgstDate DateTime  @default(now()) @db.Timestamptz(3) @map("rgst_date") // 등록일
-  mdfrId  String @db.VarChar(32) @map("mdfr_id") // 수정자아이디
-  mdfcDate  DateTime  @updatedAt @db.Timestamptz(3) @map("mdfc_date")// 수정일
-
-  @@map("cmn_user") // 공통 사용자
-}
-```
-
-## HASH 암호화
-
-> 패스워드는 bcrypt 라이브러리를 사용하여 암호화 처리, 사용자 조회시 해당 필드는 제외
-
-```js
-import bcrypt from 'bcrypt';
-...
-const hash = await bcrypt.hash(pswr, SALT_ROUNDS); // 비밀번호 암호화
-...
-// 비공개 정보를 제거한 후 반환
-if (cmnUser) {
-  delete cmnUser.pswr;
-}
-```
-
-## 사용자 정보 등록 및 조회
-
-> 사용자 정보를 등록하고 조회하는 API를 작성
-
-```js
-// 사용자 정보 등록
-app.post('/user', async (req, res) => {
-  const { name, mail, nckn, celPhn, pswr } = req.body;
-
-  if (!name || !mail || !pswr) {
-    return res.status(400).json({ error: 'name, mail, pswr required' }); // 400 Bad Request
-  }
-
-  const cmnFind = await prisma.cmnUser.findUnique({
-    where: { mail },
-  });
-  if (!cmnFind) {
-    return res.status(400).json({ error: 'mail already exists' }); // 400 Bad Request
-  }
-
-  const hash = await bcrypt.hash(pswr, SALT_ROUNDS); // 비밀번호 암호화
-  const cmnUser = await prisma.cmnUser.create({
-    data: {
-      name,
-      mail,
-      nckn,
-      celPhn,
-      pswr: hash,
-    },
-  });
-  res.json(cmnUser);
-});
-
-// 사용자 정보 조회
-app.get('/user/:id', async (req, res) => {
-  const { id } = req.params;
-
-  if (!id) {
-    return res.status(400).json({ error: 'user id required' }); // 400 Bad Request
-  }
-
-  const cmnUser = await prisma.cmnUser.findUnique({
-    where: { id },
-  });
-
-  // 비공개 정보를 제거한 후 반환
-  if (cmnUser) {
-    delete cmnUser.pswr;
-  }
-
-  res.json(cmnUser);
-});
 ```
 
 ## 참조링크

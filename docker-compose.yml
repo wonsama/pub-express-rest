@@ -1,5 +1,5 @@
 services:
-  postgres:
+  db-local-dev:
     container_name: pub-express-rest-pg
     image: postgres:16.3
     ports:

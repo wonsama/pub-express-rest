@@ -134,3 +134,5 @@ docker/postgresql/data/*
 
 # wonsama
 package-lock.json
+.env.dev
+.env.prod

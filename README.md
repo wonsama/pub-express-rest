@@ -14,24 +14,26 @@ REST API 서버를 손쉽게 구축하기 위한 TEMPLATE 프로젝트
       1. 로컬 DB 만들기 : postresql
 2. 테이블 설계
    1. 구글 시트를 활용한 테이블 초안 설계
-   2. 사용자 정보 추가
-3. REST API 기본
-   1. EXPRESS 설치
-   2. PRISMA 설치
-   3. 사용자 정보 조회
-4. REST API 인증
+   2. PRISMA를 통한 모델링
+3. EXPRESS 설정
+   1. EXPRESS 구성 및 설치
+   2. EXPRESS 미들웨어
+   3. PRISMA 설치 및 테이블 생성
+4. REST API 기본
+   1. 사용자 정보 조회
+5. REST API 인증
    1. JWT 인증 구현
       1. access_token
       2. 인증 처리
       3. refresh_token ??
-5. REST API 글쓰기
+6. REST API 글쓰기
    1. 글쓰기 테이블 설계
       1. GOOGLE SHEET
       2. PRISMA
    2. API 구현
       1. 글 읽기 : 인증 X
       2. 글 쓰기 : 인증 이후 가능
-6. redoc
+7. redoc
    1. [npm : redoc-express](https://www.npmjs.com/package/redoc-express)
 
 ## 참조링크
