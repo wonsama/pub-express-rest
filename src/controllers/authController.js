@@ -4,9 +4,8 @@ import {
   isValidTokenRefresh,
   isValidUserLogin,
   updateUserTokenRefresh,
-} from '../servcices/authService.js';
-
-import { resErrJson } from '../utils/ResponseUtil.js';
+} from "../servcices/authService.js";
+import { resErrJson, resJson } from "../utils/ResponseUtil.js";
 
 // 기본접두사 : get(select), create(insert), modify(update, delete)
 
@@ -16,7 +15,7 @@ export async function getLogin(req, res, next) {
 
   // 1. param - validation
   if (mail == null || pswr == null) {
-    return resErrJson(res, 'mail, pswr required');
+    return resErrJson(res, "mail, pswr required");
   }
 
   // 2. db query : find user
@@ -28,7 +27,7 @@ export async function getLogin(req, res, next) {
   }
 
   if (!isValidUser) {
-    return resErrJson(res, 'invalid user, check mail or pswr');
+    return resErrJson(res, "invalid user, check mail and pswr");
   }
 
   // update refresh token
@@ -43,10 +42,8 @@ export async function getLogin(req, res, next) {
 
   req.user = { mail };
 
-  console.log('login 1', req.user);
-
   // 3. response
-  res.json({ accessToken, refreshToken });
+  resJson(res, { accessToken, refreshToken });
 }
 
 export async function getToken(req, res, next) {
@@ -55,7 +52,7 @@ export async function getToken(req, res, next) {
   // 2. db query : is valid refresh token
   let isValidToken = false;
   const authorization = req.headers.authorization; // Bearer token
-  const token = authorization.split(' ')[1];
+  const token = authorization.split(" ")[1];
   const decode = await decodeJwt(token);
 
   try {
@@ -65,14 +62,14 @@ export async function getToken(req, res, next) {
     return next(e);
   }
   if (!isValidToken) {
-    return resErrJson(res, 'is not valid refresh token');
+    return resErrJson(res, "refresh token is removed. please login again");
   }
 
   // generate token
   const { accessToken } = generateTokensByMail(decode.mail);
 
   // 3. response
-  res.json({ accessToken });
+  resJson(res, { accessToken });
 }
 
 export async function getLogout(req, res, next) {
@@ -82,7 +79,7 @@ export async function getLogout(req, res, next) {
 
   // 2. db query : find user
   const authorization = req.headers.authorization; // Bearer token
-  const token = authorization.split(' ')[1];
+  const token = authorization.split(" ")[1];
   const decode = await decodeJwt(token);
 
   // 2. db query : is valid refresh token
@@ -95,6 +92,7 @@ export async function getLogout(req, res, next) {
 
   // 2. db query : update refresh token null
   if (isValidToken) {
+    // refresh token 이 제거 되지 않은 경우에만 제거한다
     try {
       await updateUserTokenRefresh(decode.mail, null);
     } catch (e) {
@@ -103,5 +101,5 @@ export async function getLogout(req, res, next) {
   }
 
   // 3. response
-  res.json({ message: 'logout', mail: decode.mail });
+  resJson(res, { logout: decode.mail });
 }

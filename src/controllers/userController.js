@@ -4,11 +4,12 @@ import {
   selectUserById,
   selectUserByMail,
   selectUsers,
-} from '../servcices/userService.js';
+  selectUsersCount,
+} from "../servcices/userService.js";
+import { resErrJson, resJson, resListJson } from "../utils/ResponseUtil.js";
 
-import { decodeJwt } from '../servcices/authService.js';
-import { getPageFromQuery } from '../utils/RequestUtil.js';
-import { resErrJson } from '../utils/ResponseUtil.js';
+import { decodeJwt } from "../servcices/authService.js";
+import { getPageFromQuery } from "../utils/RequestUtil.js";
 
 // 기본접두사 : get(select), create(insert), modify(update, delete)
 
@@ -20,14 +21,21 @@ export async function getUsers(req, res, next) {
 
   // 2. db query : select user
   let cmnUsers = null;
+  let cmnUsersCount = 0;
   try {
     cmnUsers = await selectUsers(take, skip);
+    cmnUsersCount = await selectUsersCount();
   } catch (e) {
     return next(e);
   }
 
   // 3. response
-  res.json(cmnUsers);
+  resListJson(res, cmnUsers, {
+    take,
+    skip,
+    size: cmnUsers.length,
+    total: cmnUsersCount,
+  });
 }
 
 /**
@@ -43,7 +51,7 @@ export async function getUserById(req, res, next) {
 
   // 1. param - validation
   if (id == null) {
-    return resErrJson(res, 'id required');
+    return resErrJson(res, "id required");
   }
 
   // 2. db query : select user
@@ -55,17 +63,15 @@ export async function getUserById(req, res, next) {
   }
 
   // 3. response
-  res.json(cmnUser);
+  resJson(res, cmnUser);
 }
 
 export async function getMe(req, res, next) {
   // 1. param
   // 사전에 토큰을 확인하고 들어온다.
   const authorization = req.headers.authorization; // Bearer token
-  const token = authorization.split(' ')[1];
+  const token = authorization.split(" ")[1];
   const decode = await decodeJwt(token, false);
-
-  console.log('req.user', req.user);
 
   // 1. param - validation
 
@@ -78,7 +84,7 @@ export async function getMe(req, res, next) {
   }
 
   // 3. response
-  res.json(cmnUser);
+  resJson(res, cmnUser);
 }
 
 /**
@@ -94,7 +100,7 @@ export async function createUser(req, res, next) {
 
   // 1. param : validation
   if (mail == null || pswr == null) {
-    return resErrJson(res, 'mail, pswr required');
+    return resErrJson(res, "mail, pswr required");
   }
 
   // 2. db query : find user
@@ -107,7 +113,7 @@ export async function createUser(req, res, next) {
 
   // user validation
   if (isExistUser) {
-    return resErrJson(res, 'mail already exists');
+    return resErrJson(res, "mail already exists");
   }
 
   // 2. db query : insert cmn_user
@@ -119,5 +125,5 @@ export async function createUser(req, res, next) {
   }
 
   // 3. response
-  res.json(cmnUser);
+  resJson(res, cmnUser, 201);
 }

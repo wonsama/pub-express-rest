@@ -1,6 +1,6 @@
-import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
+import { ExtractJwt, Strategy as JwtStrategy } from "passport-jwt";
 
-import passport from 'passport';
+import passport from "passport";
 
 const accessOpts = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -13,19 +13,21 @@ const refreshOpts = {
 };
 
 passport.use(
-  'access',
+  "access",
   new JwtStrategy(accessOpts, (jwt_payload, done) => {
     // Here, you can add logic to verify the user from the payload
+    // jwt_payload : 최초 token 발급시 payload 에 담긴 정보 => user 정보
     return done(null, jwt_payload);
-  }),
+  })
 );
 
 passport.use(
-  'refresh',
+  "refresh",
   new JwtStrategy(refreshOpts, (jwt_payload, done) => {
     // Here, you can add logic to verify the user from the payload
+    // jwt_payload : 최초 token 발급시 payload 에 담긴 정보 => user 정보
     return done(null, jwt_payload);
-  }),
+  })
 );
 
 export default passport;

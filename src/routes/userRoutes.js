@@ -1,32 +1,28 @@
 import {
-  authExceptionHandler,
-  authenticateAccessJWT,
-} from '../middleware/authenticationMiddleware.js';
-import {
   createUser,
   getMe,
   getUserById,
   getUsers,
-} from '../controllers/userController.js';
+} from "../controllers/userController.js";
 
-import express from 'express';
+import { authenticateAccessJWT } from "../middleware/authenticationMiddleware.js";
+import express from "express";
 
 const router = express.Router();
 
 // 라우팅 시 :id 와 같이 path parameter 를 사용하는 것을 상위에 배치하고, 그 외의 경우는 하위에 배치한다.
 
-// GET /api/user
-// router.get('/', userController.getAllUsers);
+// GET /api/user/:id, 사용자 id 에 해당하는 사용자 정보를 가져온다.
+router.get("/:id", getUserById);
 
-// GET /api/user/:id
-router.get('/:id', getUserById);
+// GET /api/user, 모든 사용자 정보를 가져온다.
+router.get("/", getUsers);
 
-// GET /api/user
-router.get('/', getUsers);
+// POST /api/user, 사용자 정보를 생성한다.
+router.post("/", createUser);
 
-// POST /api/user
-router.post('/', createUser);
-router.post('/me', authenticateAccessJWT, getMe);
+// POST /api/user/me : 사용자 정보를 가져온다
+router.post("/me", authenticateAccessJWT, getMe);
 
 // PUT /api/user/:id
 // router.put('/:id', userController.updateUser);

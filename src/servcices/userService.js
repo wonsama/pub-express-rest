@@ -1,6 +1,6 @@
-import { PrismaClient } from '@prisma/client';
-import { SALT_ROUNDS } from '../config/config.js';
-import bcrypt from 'bcrypt';
+import { PrismaClient } from "@prisma/client";
+import { SALT_ROUNDS } from "../config/config.js";
+import bcrypt from "bcrypt";
 
 // 유효성 검증은 controller 에서 수행
 // 기본 접두사 : insert, select, update, delete
@@ -88,6 +88,10 @@ export async function selectUserByMail(mail) {
   });
 }
 
+export async function selectUsersCount() {
+  return prisma.cmnUser.count();
+}
+
 export async function selectUsers(take, skip) {
   // include 와 select 는 동시에 사용할 수 없다.
   return prisma.cmnUser.findMany({
@@ -102,6 +106,6 @@ export async function selectUsers(take, skip) {
         select: { name: true, nickName: true, celPhn: true },
       },
     },
-    orderBy: { rgstDate: 'desc' },
+    orderBy: { rgstDate: "desc" },
   });
 }
