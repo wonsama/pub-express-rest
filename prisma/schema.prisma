@@ -23,7 +23,7 @@ model CmnUser {
   // FIELDS
   mail  String  @db.VarChar(64) @unique // 이메일, 유니크
   hash  String  @db.VarChar(64) // 해시, 비밀번호
-  rfrsTkn  String?  @db.VarChar(64) @map("rfrs_tkn") // 리프레시 토큰
+  rfrsTkn  String?  @db.VarChar(256) @map("rfrs_tkn") // 리프레시 토큰, 167
 
   // SHARE
   useYn  String @db.Char(1) @default("Y") @map("use_yn")// 사용여부

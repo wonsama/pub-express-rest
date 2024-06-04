@@ -4,96 +4,36 @@
 
 ```tree
 4. REST API 인증
-   1. JWT 인증 구현
-      1. access_token
-      2. 인증 처리
-      3. refresh_token ??
+  1. JWT 인증 요약
+  2. JWT 인증 구현
 ```
 
-## 라이브러리 설치
+## 4.1. JWT 인증 요약
+
+1. 의존성 설치 `npm i express jsonwebtoken passport passport-jwt bcryptjs`
+2. 환경변수 설정
+3. Passport 전략 설정 - access token, refresh token
+4. 미들웨어 정의 - access token, refresh token 을 사용하여 인증
+5. 사용자 인증 라우터 구현
+6. express 설정 - 미들웨어 적용
+
+## 4.2. JWT 인증 구현
+
+### 4.2.1. 의존성 설치
 
 ```bash
 npm i jsonwebtoken passport passport-jwt
 ```
 
-```js
-const express = require('express');
-const passport = require('passport');
-const jwt = require('jsonwebtoken');
-const app = express();
+### 4.2.2. 환경변수 설정
 
-// Middleware
-app.use(express.json());
-app.use(passport.initialize());
+### 4.2.3. Passport 전략 설정
 
-// JWT Options
-const jwtOptions = {
-  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey: 'your_secret_key',
-};
+### 4.2.4. 미들웨어 정의
 
-// JWT Strategy
-const jwtStrategy = new JwtStrategy(jwtOptions, (payload, done) => {
-  // Find the user based on the payload
-  User.findById(payload.sub, (err, user) => {
-    if (err) {
-      return done(err, false);
-    }
-    if (user) {
-      return done(null, user);
-    } else {
-      return done(null, false);
-    }
-  });
-});
+### 4.2.5. 사용자 인증 라우터 구현
 
-// Use the JWT Strategy
-passport.use(jwtStrategy);
-```
-
-```js
-// Login Route
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-
-  // Find the user in the database
-  User.findOne({ username }, (err, user) => {
-    if (err) {
-      return res.status(500).json({ message: 'Internal server error' });
-    }
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid username or password' });
-    }
-
-    // Compare the password
-    user.comparePassword(password, (err, isMatch) => {
-      if (err) {
-        return res.status(500).json({ message: 'Internal server error' });
-      }
-      if (!isMatch) {
-        return res
-          .status(401)
-          .json({ message: 'Invalid username or password' });
-      }
-
-      // Generate a JWT
-      const payload = { sub: user._id };
-      const token = jwt.sign(payload, jwtOptions.secretOrKey);
-
-      return res.status(200).json({ token });
-    });
-  });
-});
-
-// Protected Route
-app.get(
-  '/protected',
-  passport.authenticate('jwt', { session: false }),
-  (req, res) => {
-    res.status(200).json({ message: 'Access granted' });
-  },
-);
-```
+### 4.2.6. express 설정
 
 ## 참조링크
 
@@ -101,3 +41,6 @@ app.get(
 - [expressjs : routing](https://expressjs.com/en/guide/routing.html)
 - [Express + Typescript 환경 구축하기](https://velog.io/@brgndy/Express-Typescript-%ED%99%98%EA%B2%BD-%EA%B5%AC%EC%B6%95%ED%95%98%EA%B8%B0)
 - [`[express.js] 누구나 시작할 수 있는! typescript로 express.js 세팅하기 (+Eslint, Prettier)`](https://velog.io/@gyulhana/express.js-%EB%88%84%EA%B5%AC%EB%82%98-%EC%8B%9C%EC%9E%91%ED%95%A0-%EC%88%98-%EC%9E%88%EB%8A%94-typescript%EB%A1%9C-express.js-%EC%84%B8%ED%8C%85%ED%95%98%EA%B8%B0-Eslint-Prettier)
+- [Spring Security JWT Role-based Authorization Tutorial](https://www.codejava.net/frameworks/spring-boot/spring-security-jwt-role-based-authorization)
+- [JWT에서 역할을 설정하는 것이 모범 사례인가요?](https://stackoverflow.com/questions/47224931/is-setting-roles-in-jwt-a-best-practice)
+- [Role-based access control with JWT](https://docs.netlify.com/security/secure-access-to-sites/role-based-access-control/)

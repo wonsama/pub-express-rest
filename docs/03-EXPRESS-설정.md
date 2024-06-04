@@ -144,6 +144,15 @@ npx prisma migrate deploy --preview-feature
 npx prisma migrate dev --preview-feature
 ```
 
+### 3.3.4. model, view, controller, service
+
+- model : 데이터베이스 테이블과 연결되는 모델
+- view : 사용자에게 보여지는 화면
+- controller : 사용자의 요청을 받아서 처리하는 컨트롤러
+- service : 비즈니스 로직을 처리하는 서비스
+
+model 은 prisma client 를 통해 제공 받는 것을 활용
+
 ## 참조링크
 
 - [expressjs : hello-world](https://expressjs.com/ko/starter/hello-world.html)

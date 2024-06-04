@@ -1,6 +1,7 @@
 import { NODE_ENV, ROOT_DIR, SERVER_PORT } from './config/config.js';
 import { error404Handler, errorHandler } from './middleware/errorMiddleware.js';
 
+import authRoutes from './routes/authRoutes.js';
 import { errorPrismaHandler } from './middleware/prismaMiddleware.js';
 import express from 'express';
 import path from 'path';
@@ -16,6 +17,7 @@ app.use(express.json({ limit: '10mb' })); // Parse JSON bodies (for API requests
 
 // Routes
 app.use('/api/user', userRoutes);
+app.use('/api/auth', authRoutes);
 
 // Middleware - Error
 app.use(errorPrismaHandler);

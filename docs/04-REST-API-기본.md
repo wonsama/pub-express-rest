@@ -62,9 +62,9 @@ export async function createUser(req, res, next) {
   }
 
   // 2. db query : find user
-  let cmnFind = null;
+  let cmnFind = 0;
   try {
-    cmnFind = await prisma.cmnUser.findUnique({
+    cmnFind = await prisma.cmnUser.count({
       where: { mail },
     });
   } catch (e) {
@@ -72,7 +72,7 @@ export async function createUser(req, res, next) {
   }
 
   // user validation
-  if (cmnFind !== null) {
+  if (cmnFind > 0) {
     return res.status(400).json({ error: 'mail already exists' }); // 400 Bad Request
   }
 
@@ -84,41 +84,18 @@ export async function createUser(req, res, next) {
       data: {
         mail,
         hash,
+        // 관계가 있는 경우 별도의 아이디를 생성하지 않아도 된다. (  userId: cmnUser.id )
+        cmnUserPrfl: {
+          create: { name, nickName, celPhn },
+        },
       },
     });
   } catch (e) {
     return next(e);
   }
-
-  // 2. db query : create cmn_user_prfl
-  let cmnUserPrfl = null;
-  try {
-    cmnUserPrfl = await prisma.cmnUserPrfl.create({
-      data: {
-        userId: cmnUser.id,
-        name,
-        nickName,
-        celPhn,
-      },
-    });
-  } catch (e) {
-    return next(e);
-  }
-
-  // 2. db query : cmnUser
-  try {
-    cmnFind = await prisma.cmnUser.findUnique({
-      where: { mail },
-      include: { cmnUserPrfl: true },
-    });
-  } catch (e) {
-    return next(e);
-  }
-
-  delete cmnFind.hash;
 
   // 3. response
-  res.json(cmnFind);
+  return getUserById({ params: { id: cmnUser.id } }, res, next);
 }
 ```
 
@@ -143,20 +120,21 @@ export async function getUserById(req, res, next) {
   // 2. db query : find user
   let cmnUser = null;
   try {
+    // include 와 select 는 동시에 사용할 수 없다.
     cmnUser = await prisma.cmnUser.findUnique({
       where: { id },
-      include: { cmnUserPrfl: true },
+      select: {
+        mail: true,
+        useYn: true,
+        rfrsTkn: true,
+        cmnUserPrfl: {
+          select: { name: true, nickName: true, celPhn: true },
+        },
+      },
     });
   } catch (e) {
     return next(e);
   }
-
-  if (cmnUser !== null) {
-    delete cmnUser.hash;
-  }
-
-  // 3. response
-  res.json(cmnUser);
 }
 ```
 

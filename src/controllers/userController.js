@@ -1,8 +1,34 @@
-import { PrismaClient } from '@prisma/client';
-import { SALT_ROUNDS } from '../config/config.js';
-import bcrypt from 'bcrypt';
+import {
+  insertUser,
+  isExistUserByEmail,
+  selectUserById,
+  selectUserByMail,
+  selectUsers,
+} from '../servcices/userService.js';
 
-const prisma = new PrismaClient();
+import { decodeJwt } from '../servcices/authService.js';
+import { getPageFromQuery } from '../utils/RequestUtil.js';
+import { resErrJson } from '../utils/ResponseUtil.js';
+
+// 기본접두사 : get(select), create(insert), modify(update, delete)
+
+export async function getUsers(req, res, next) {
+  // 1. param
+  const { take, skip } = getPageFromQuery(req);
+
+  // 1. param - validation
+
+  // 2. db query : select user
+  let cmnUsers = null;
+  try {
+    cmnUsers = await selectUsers(take, skip);
+  } catch (e) {
+    return next(e);
+  }
+
+  // 3. response
+  res.json(cmnUsers);
+}
 
 /**
  * Retrieves a user by their ID.
@@ -17,22 +43,38 @@ export async function getUserById(req, res, next) {
 
   // 1. param - validation
   if (id == null) {
-    return res.status(400).json({ error: 'user id required' }); // 400 Bad Request
+    return resErrJson(res, 'id required');
   }
 
-  // 2. db query : find user
+  // 2. db query : select user
   let cmnUser = null;
   try {
-    cmnUser = await prisma.cmnUser.findUnique({
-      where: { id },
-      include: { cmnUserPrfl: true },
-    });
+    cmnUser = await selectUserById(id);
   } catch (e) {
     return next(e);
   }
 
-  if (cmnUser !== null) {
-    delete cmnUser.hash;
+  // 3. response
+  res.json(cmnUser);
+}
+
+export async function getMe(req, res, next) {
+  // 1. param
+  // 사전에 토큰을 확인하고 들어온다.
+  const authorization = req.headers.authorization; // Bearer token
+  const token = authorization.split(' ')[1];
+  const decode = await decodeJwt(token, false);
+
+  console.log('req.user', req.user);
+
+  // 1. param - validation
+
+  // 2. db query : select user
+  let cmnUser = null;
+  try {
+    cmnUser = await selectUserByMail(decode.mail);
+  } catch (e) {
+    return next(e);
   }
 
   // 3. response
@@ -48,70 +90,34 @@ export async function getUserById(req, res, next) {
  */
 export async function createUser(req, res, next) {
   // 1. param
-  const { mail, pswr } = req.body; // CmnUser
-  const { name, nickName, celPhn } = req.body; // CmnUserPrfl, optional
+  const { mail, pswr } = req.body; // CmnUser, mandatory
 
   // 1. param : validation
   if (mail == null || pswr == null) {
-    return res.status(400).json({ error: 'mail, pswr required' }); // 400 Bad Request
+    return resErrJson(res, 'mail, pswr required');
   }
 
   // 2. db query : find user
-  let cmnFind = null;
+  let isExistUser = false;
   try {
-    cmnFind = await prisma.cmnUser.findUnique({
-      where: { mail },
-    });
+    isExistUser = await isExistUserByEmail(mail);
   } catch (e) {
     return next(e);
   }
 
   // user validation
-  if (cmnFind !== null) {
-    return res.status(400).json({ error: 'mail already exists' }); // 400 Bad Request
+  if (isExistUser) {
+    return resErrJson(res, 'mail already exists');
   }
 
-  // 2. db query : create cmn_user
-  const hash = await bcrypt.hash(pswr, SALT_ROUNDS); // 비밀번호 암호화
-  let cmnUser;
+  // 2. db query : insert cmn_user
+  let cmnUser = null;
   try {
-    cmnUser = await prisma.cmnUser.create({
-      data: {
-        mail,
-        hash,
-      },
-    });
+    cmnUser = await insertUser(req);
   } catch (e) {
     return next(e);
   }
-
-  // 2. db query : create cmn_user_prfl
-  let cmnUserPrfl = null;
-  try {
-    cmnUserPrfl = await prisma.cmnUserPrfl.create({
-      data: {
-        userId: cmnUser.id,
-        name,
-        nickName,
-        celPhn,
-      },
-    });
-  } catch (e) {
-    return next(e);
-  }
-
-  // 2. db query : cmnUser
-  try {
-    cmnFind = await prisma.cmnUser.findUnique({
-      where: { mail },
-      include: { cmnUserPrfl: true },
-    });
-  } catch (e) {
-    return next(e);
-  }
-
-  delete cmnFind.hash;
 
   // 3. response
-  res.json(cmnFind);
+  res.json(cmnUser);
 }
