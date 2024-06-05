@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { resErrJson } from '../utils/ResponseUtil.js';
 
 /**
  * Handles Prisma errors and sends a JSON response with the error details.
@@ -9,9 +10,7 @@ import { Prisma } from '@prisma/client';
  */
 export function errorPrismaHandler(err, req, res, next) {
   if (isPrismaError(err)) {
-    res.json({
-      error: getPrismaError(err),
-    });
+    resErrJson(res, getPrismaError(err), 503); // 503 Service Unavailable
   }
 }
 

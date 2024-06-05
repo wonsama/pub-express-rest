@@ -1,6 +1,12 @@
-import { PrismaClient } from "@prisma/client";
-import { SALT_ROUNDS } from "../config/config.js";
-import bcrypt from "bcrypt";
+import {
+  addSubSelect,
+  createSelect,
+  dynamicWhere,
+} from '../utils/RequestUtil.js';
+
+import { PrismaClient } from '@prisma/client';
+import { SALT_ROUNDS } from '../config/config.js';
+import bcrypt from 'bcrypt';
 
 // 유효성 검증은 controller 에서 수행
 // 기본 접두사 : insert, select, update, delete
@@ -88,24 +94,24 @@ export async function selectUserByMail(mail) {
   });
 }
 
-export async function selectUsersCount() {
-  return prisma.cmnUser.count();
-}
+export async function selectUser(params) {
+  const { take, skip } = params;
+  const where = dynamicWhere(['id', 'mail', 'useYn', 'rfrsTkn'], params);
+  const select = createSelect(['id', 'mail', 'useYn', 'rfrsTkn']);
+  addSubSelect(select, 'cmnUserPrfl', ['name', 'nickName', 'celPhn']);
+  const orderBy = { rgstDate: 'desc' };
 
-export async function selectUsers(take, skip) {
-  // include 와 select 는 동시에 사용할 수 없다.
   return prisma.cmnUser.findMany({
     skip,
     take,
-    select: {
-      id: true,
-      mail: true,
-      useYn: true,
-      rfrsTkn: true,
-      cmnUserPrfl: {
-        select: { name: true, nickName: true, celPhn: true },
-      },
-    },
-    orderBy: { rgstDate: "desc" },
+    where,
+    select,
+    orderBy,
   });
+}
+
+export async function selectUserCount(params) {
+  const where = dynamicWhere(['id', 'mail', 'useYn', 'rfrsTkn'], params);
+
+  return prisma.cmnUser.count({ where });
 }

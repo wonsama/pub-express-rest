@@ -1,10 +1,14 @@
 import {
+  authenticateAccessJWT,
+  authenticateRefreshJWT,
+} from '../middleware/authenticationMiddleware.js';
+import {
   getLogin,
   getLogout,
+  getMe,
   getToken,
 } from '../controllers/authController.js';
 
-import { authenticateRefreshJWT } from '../middleware/authenticationMiddleware.js';
 import { checkPermission } from '../middleware/authorizationMiddleware.js';
 import express from 'express';
 
@@ -23,5 +27,8 @@ router.post('/logout', authenticateRefreshJWT, getLogout);
 // bearer token 이 존재하지 않거나 유요하지 않은 경우 401 (unauthorized) 을 반환한다
 // refresh token 을 가지고서 새로운 access token 을 발급한다
 router.post('/token', authenticateRefreshJWT, getToken);
+
+// POST /api/auth/me : 사용자 정보를 가져온다
+router.get('/me', authenticateAccessJWT, getMe);
 
 export default router;

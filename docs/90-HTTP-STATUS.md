@@ -23,6 +23,7 @@ Server error responses (500 – 599)
 ## Server error responses
 
 - 500 Internal Server Error
+- 503 Service Unavailable
 
 ## 참조링크
 

@@ -1,9 +1,13 @@
-import { createRole } from "../controllers/roleController.js";
-import express from "express";
+import { createRole, getRoles } from '../controllers/roleController.js';
+
+import express from 'express';
 
 const router = express.Router();
 
-router.post("/", createRole);
+router.post('/', createRole);
+
+router.get('/', getRoles);
+
 // router.post("/group", createGroup);
 // router.post("/relation", createRelation);
 

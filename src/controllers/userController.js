@@ -1,40 +1,38 @@
 import {
   insertUser,
   isExistUserByEmail,
+  selectUser,
   selectUserById,
-  selectUserByMail,
-  selectUsers,
-  selectUsersCount,
-} from "../servcices/userService.js";
-import { resErrJson, resJson, resListJson } from "../utils/ResponseUtil.js";
+  selectUserCount,
+} from '../servcices/userService.js';
+import { resErrJson, resJson, resListJson } from '../utils/ResponseUtil.js';
 
-import { decodeJwt } from "../servcices/authService.js";
-import { getPageFromQuery } from "../utils/RequestUtil.js";
+import { createPage } from '../utils/RequestUtil.js';
 
 // 기본접두사 : get(select), create(insert), modify(update, delete)
 
 export async function getUsers(req, res, next) {
   // 1. param
-  const { take, skip } = getPageFromQuery(req);
+  const { id, mail, useYn, rfrsTkn } = req.query; // 검색, optional
+  const { page, per } = req.query; // 페이지 1, optional
+  const { skip, take } = createPage(page, per); // 페이지 2, auto
 
-  // 1. param - validation
-
-  // 2. db query : select user
-  let cmnUsers = null;
-  let cmnUsersCount = 0;
+  // 2. db query
+  let items = null;
+  let counts = 0;
   try {
-    cmnUsers = await selectUsers(take, skip);
-    cmnUsersCount = await selectUsersCount();
+    items = await selectUser({ id, mail, useYn, rfrsTkn, skip, take });
+    counts = await selectUserCount({ id, mail, useYn, rfrsTkn });
   } catch (e) {
     return next(e);
   }
 
   // 3. response
-  resListJson(res, cmnUsers, {
+  resListJson(res, items, {
     take,
     skip,
-    size: cmnUsers.length,
-    total: cmnUsersCount,
+    size: items.length,
+    total: counts,
   });
 }
 
@@ -51,34 +49,13 @@ export async function getUserById(req, res, next) {
 
   // 1. param - validation
   if (id == null) {
-    return resErrJson(res, "id required");
+    return resErrJson(res, 'id required');
   }
 
   // 2. db query : select user
   let cmnUser = null;
   try {
     cmnUser = await selectUserById(id);
-  } catch (e) {
-    return next(e);
-  }
-
-  // 3. response
-  resJson(res, cmnUser);
-}
-
-export async function getMe(req, res, next) {
-  // 1. param
-  // 사전에 토큰을 확인하고 들어온다.
-  const authorization = req.headers.authorization; // Bearer token
-  const token = authorization.split(" ")[1];
-  const decode = await decodeJwt(token, false);
-
-  // 1. param - validation
-
-  // 2. db query : select user
-  let cmnUser = null;
-  try {
-    cmnUser = await selectUserByMail(decode.mail);
   } catch (e) {
     return next(e);
   }
@@ -100,7 +77,7 @@ export async function createUser(req, res, next) {
 
   // 1. param : validation
   if (mail == null || pswr == null) {
-    return resErrJson(res, "mail, pswr required");
+    return resErrJson(res, 'mail, pswr required');
   }
 
   // 2. db query : find user
@@ -113,10 +90,10 @@ export async function createUser(req, res, next) {
 
   // user validation
   if (isExistUser) {
-    return resErrJson(res, "mail already exists");
+    return resErrJson(res, 'mail already exists');
   }
 
-  // 2. db query : insert cmn_user
+  // 2. db query : insert user
   let cmnUser = null;
   try {
     cmnUser = await insertUser(req);

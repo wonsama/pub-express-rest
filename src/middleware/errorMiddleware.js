@@ -1,3 +1,5 @@
+import { resErrJson } from '../utils/ResponseUtil.js';
+
 /**
  * Handles 404 errors and forwards the error to the next middleware.
  * @param {import('express').Request} req - The request object.
@@ -19,10 +21,5 @@ export function error404Handler(req, res, next) {
  * @param {import('express').NextFunction} next - The next function.
  */
 export function errorHandler(err, req, res, next) {
-  res.status(err.status || 500);
-  res.json({
-    error: {
-      message: err.message,
-    },
-  });
+  resErrJson(res, err.message, err.status || 500);
 }
