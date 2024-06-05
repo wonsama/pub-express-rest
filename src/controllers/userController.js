@@ -1,15 +1,14 @@
 import {
   insertUser,
-  isExistUserByEmail,
   selectUser,
-  selectUserById,
   selectUserCount,
-} from '../servcices/userService.js';
-import { resErrJson, resJson, resListJson } from '../utils/ResponseUtil.js';
+} from "../servcices/userService.js";
+import { resErrJson, resJson, resListJson } from "../utils/ResponseUtil.js";
 
-import { createPage } from '../utils/RequestUtil.js';
+import { createPage } from "../utils/RequestUtil.js";
 
-// 기본접두사 : get(select), create(insert), modify(update, delete)
+// 기본접두사 : get, post, put, delete / 라우팅 정보와 동일하게 구성
+// 메소드명 형식 : [메소드명][라우팅정보1][라우팅정보2]...
 
 export async function getUsers(req, res, next) {
   // 1. param
@@ -36,71 +35,29 @@ export async function getUsers(req, res, next) {
   });
 }
 
-/**
- * Retrieves a user by their ID.
- * @param {Object} req - The request object.
- * @param {Object} res - The response object.
- * @param {Function} next - The next middleware function.
- * @returns {Promise<void>} - A promise that resolves when the user is retrieved and sent as a response.
- */
-export async function getUserById(req, res, next) {
-  // 1. param
-  const { id } = req.params;
-
-  // 1. param - validation
-  if (id == null) {
-    return resErrJson(res, 'id required');
-  }
-
-  // 2. db query : select user
-  let cmnUser = null;
-  try {
-    cmnUser = await selectUserById(id);
-  } catch (e) {
-    return next(e);
-  }
-
-  // 3. response
-  resJson(res, cmnUser);
-}
-
-/**
- * Creates a new user.
- * @param {Object} req - The request object.
- * @param {Object} res - The response object.
- * @param {Function} next - The next middleware function.
- * @returns {Promise<void>} - A promise that resolves when the user is created and sent as a response.
- */
-export async function createUser(req, res, next) {
+export async function postUser(req, res, next) {
   // 1. param
   const { mail, pswr } = req.body; // CmnUser, mandatory
-
-  // 1. param : validation
   if (mail == null || pswr == null) {
-    return resErrJson(res, 'mail, pswr required');
+    return resErrJson(res, "mail, pswr required");
   }
 
-  // 2. db query : find user
-  let isExistUser = false;
   try {
-    isExistUser = await isExistUserByEmail(mail);
+    // 2. db query : 기등록 사용자 점검
+    let count = await selectUserCount({ mail });
+    if (count > 0) {
+      return resErrJson(res, "mail already exists");
+    }
   } catch (e) {
     return next(e);
-  }
-
-  // user validation
-  if (isExistUser) {
-    return resErrJson(res, 'mail already exists');
   }
 
   // 2. db query : insert user
-  let cmnUser = null;
   try {
-    cmnUser = await insertUser(req);
+    const cmnUser = await insertUser(req);
+    // 3. response
+    resJson(res, cmnUser, 201);
   } catch (e) {
     return next(e);
   }
-
-  // 3. response
-  resJson(res, cmnUser, 201);
 }

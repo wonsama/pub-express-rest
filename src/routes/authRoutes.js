@@ -1,34 +1,33 @@
 import {
   authenticateAccessJWT,
   authenticateRefreshJWT,
-} from '../middleware/authenticationMiddleware.js';
+} from "../middleware/authenticationMiddleware.js";
 import {
-  getLogin,
-  getLogout,
   getMe,
-  getToken,
-} from '../controllers/authController.js';
+  postLogin,
+  postLogout,
+  postToken,
+} from "../controllers/authController.js";
 
-import { checkPermission } from '../middleware/authorizationMiddleware.js';
-import express from 'express';
+import { checkPermission } from "../middleware/authorizationMiddleware.js";
+import express from "express";
 
 // authentication : 인증
 
 const router = express.Router();
 
 // POST /api/auth/login
-router.post('/login', getLogin);
+router.post("/login", postLogin);
 
 // POST /api/auth/logout
 // 로그아웃시 refresh token 을 null 로 업데이트 한다
-router.post('/logout', authenticateRefreshJWT, getLogout);
+router.post("/logout", authenticateRefreshJWT, postLogout);
 
-// POST /api/auth/token (refresh token)
-// bearer token 이 존재하지 않거나 유요하지 않은 경우 401 (unauthorized) 을 반환한다
+// POST /api/auth/token
 // refresh token 을 가지고서 새로운 access token 을 발급한다
-router.post('/token', authenticateRefreshJWT, getToken);
+router.post("/token", postToken);
 
 // POST /api/auth/me : 사용자 정보를 가져온다
-router.get('/me', authenticateAccessJWT, getMe);
+router.get("/me", authenticateAccessJWT, getMe);
 
 export default router;

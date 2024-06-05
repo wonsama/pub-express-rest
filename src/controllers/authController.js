@@ -1,128 +1,117 @@
+import { decodeJwt, generateTokens } from "../servcices/authService.js";
+import { getDecode, getToken } from "../utils/RequestUtil.js";
+import { resErrJson, resJson } from "../utils/ResponseUtil.js";
 import {
-  decodeJwt,
-  generateTokensByMail,
-  isValidTokenRefresh,
-  isValidUserLogin,
-  updateUserTokenRefresh,
-} from '../servcices/authService.js';
-import { resErrJson, resJson } from '../utils/ResponseUtil.js';
+  selectUser,
+  selectUserCount,
+  selectUserUnique,
+  updateUser,
+} from "../servcices/userService.js";
 
-import { selectUserByMail } from '../servcices/userService.js';
+import bcrypt from "bcrypt";
 
-// 기본접두사 : get(select), create(insert), modify(update, delete)
+// 기본접두사 : get, post, put, delete / 라우팅 정보와 동일하게 구성
+// 메소드명 형식 : [메소드명][라우팅정보1][라우팅정보2]...
 
-export async function getLogin(req, res, next) {
+// O
+export async function postLogin(req, res, next) {
   // 1. param
   const { mail, pswr } = req.body;
-
-  // 1. param - validation
   if (mail == null || pswr == null) {
-    return resErrJson(res, 'mail, pswr required');
+    return resErrJson(res, "mail, pswr required");
   }
 
   // 2. db query : find user
-  let isValidUser = false;
+  let user = null;
   try {
-    isValidUser = await isValidUserLogin(mail, pswr);
+    user = await selectUserUnique(
+      { mail, useYn: "Y" },
+      { id: true, hash: true }
+    );
+    if (user == null) {
+      return resErrJson(res, "invalid user, check mail");
+    }
+    const isValid = bcrypt.compareSync(pswr, user.hash);
+    if (!isValid) {
+      return resErrJson(res, "invalid user, check pswr");
+    }
   } catch (e) {
     return next(e);
   }
 
-  if (!isValidUser) {
-    return resErrJson(res, 'invalid user, check mail and pswr');
-  }
-
-  // update refresh token
-  const { accessToken, refreshToken } = generateTokensByMail(mail);
+  // create tokens
+  const { accessToken, refreshToken } = generateTokens(user.id);
 
   // 2. db query : update refresh token
   try {
-    await updateUserTokenRefresh(mail, refreshToken);
+    await updateUser({ id: user.id, rfrsTkn: refreshToken });
   } catch (e) {
     return next(e);
   }
-
-  req.user = { mail };
 
   // 3. response
   resJson(res, { accessToken, refreshToken });
 }
 
-export async function getToken(req, res, next) {
+export async function postToken(req, res, next) {
   // 1. param
-
-  // 2. db query : is valid refresh token
-  let isValidToken = false;
-  const authorization = req.headers.authorization; // Bearer token
-  const token = authorization.split(' ')[1];
-  const decode = await decodeJwt(token);
+  const { rfrsTkn } = req.body;
+  if (rfrsTkn == null) {
+    return resErrJson(res, "rfrsTkn required"); // 리프레시 토큰 정보 확인
+  }
 
   try {
-    // 최초 token 발급시 사용한 mail 정보 (payload 에서 가져온다) 와 token 이 DB에 존재하는지 여부를 확인한다
-    isValidToken = await isValidTokenRefresh(decode.mail, token);
+    // 2. db query : 유효한 리프레시 토큰인지 확인
+    let count = await selectUserCount({ rfrsTkn });
+    if (count == 0) {
+      return resErrJson(res, "invalid refresh token");
+    }
   } catch (e) {
     return next(e);
   }
-  if (!isValidToken) {
-    return resErrJson(res, 'refresh token is removed. please login again');
-  }
 
-  // generate token
-  const { accessToken } = generateTokensByMail(decode.mail);
+  // generate tokens
+  const decode = await decodeJwt(rfrsTkn, true);
+  const { accessToken } = generateTokens(decode.id);
 
   // 3. response
   resJson(res, { accessToken });
 }
 
-export async function getLogout(req, res, next) {
+// O
+export async function postLogout(req, res, next) {
   // 1. param
+  const token = getToken(req);
+  const decode = await getDecode(req);
 
-  // 1. param - validation
-
-  // 2. db query : find user
-  const authorization = req.headers.authorization; // Bearer token
-  const token = authorization.split(' ')[1];
-  const decode = await decodeJwt(token);
-
-  // 2. db query : is valid refresh token
-  let isValidToken = false;
+  let count = 0;
   try {
-    isValidToken = await isValidTokenRefresh(decode.mail, token);
+    // 2. db query : refresh token 존재여부 확인
+    count = await selectUserCount({ id: decode.id, rfrsTkn: token });
+    if (count > 0) {
+      // 2. db query : refresh token 이 제거 되지 않은 경우에만 제거
+      await updateUserTokenRefresh(decode.id, null);
+    }
   } catch (e) {
     return next(e);
-  }
-
-  // 2. db query : update refresh token null
-  if (isValidToken) {
-    // refresh token 이 제거 되지 않은 경우에만 제거한다
-    try {
-      await updateUserTokenRefresh(decode.mail, null);
-    } catch (e) {
-      return next(e);
-    }
   }
 
   // 3. response
   resJson(res, { logout: decode.mail });
 }
 
+// O
 export async function getMe(req, res, next) {
   // 1. param
-  // 사전에 토큰을 확인하고 들어온다.
-  const authorization = req.headers.authorization; // Bearer token
-  const token = authorization.split(' ')[1];
-  const decode = await decodeJwt(token, false);
+  const decode = await getDecode(req);
 
-  // 1. param - validation
-
-  // 2. db query : select user
-  let cmnUser = null;
   try {
-    cmnUser = await selectUserByMail(decode.mail);
+    // 2. db query : select user
+    const cmnUser = await selectUser({ id: decode.id });
+
+    // 3. response
+    resJson(res, cmnUser);
   } catch (e) {
     return next(e);
   }
-
-  // 3. response
-  resJson(res, cmnUser);
 }

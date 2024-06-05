@@ -1,26 +1,18 @@
-# 02-테이블설계
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-## 목표
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
-```tree
-2. 테이블 설계
-   1. 구글 시트를 활용한 테이블 초안 설계
-   2. PRISMA를 통한 모델링
-```
+generator client {
+  provider = "prisma-client-js"
+}
 
-## 2.1. 구글 시트를 활용한 테이블 초안 설계
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
-`[그림 1 : 테이블 설계]`
-
-![table : cmn_user](images/02-04.png)
-
-[나머지 테이블 설계정보 확인하기 ↗](https://docs.google.com/spreadsheets/d/1WGvfLKJqnhiqzotDG_pZtTsafIikOlcWGp0XOdLn8Ao/edit?usp=sharing)
-
-## 2.2. PRISMA를 통한 모델링
-
-위 테이블 설계를 기반으로 모델링 정보를 작성한다
-
-```prisma
 model CmnUser {
   // PK
   id    String  @id @default(uuid())  @db.VarChar(64) // 아이디, UUID = 36자리
@@ -31,7 +23,7 @@ model CmnUser {
   // FIELDS
   mail  String  @db.VarChar(64) @unique // 이메일, 유니크
   hash  String  @db.VarChar(64) // 해시, 비밀번호
-  rfrsTkn  String?  @db.VarChar(64) @map("rfrs_tkn") // 리프레시 토큰
+  rfrsTkn  String?  @db.VarChar(256) @map("rfrs_tkn") // 리프레시 토큰, 167
 
   // SHARE
   useYn  String @db.Char(1) @default("Y") @map("use_yn")// 사용여부
@@ -54,9 +46,9 @@ model CmnUserPrfl {
   cmnRoleRltn CmnRoleRltn? @relation("CmnUserPrfl_1_CmnRoleRltn_1")
 
   // FIELDS
-  name  String  @db.VarChar(32)  // 이름
-  nickName  String  @db.VarChar(32)  @map("nick_name") // 닉네임
-  celPhn  String  @db.VarChar(32) @map("cel_phn") // 휴대전화
+  name  String?  @db.VarChar(32)  // 이름
+  nickName  String?  @db.VarChar(32)  @map("nick_name") // 닉네임
+  celPhn  String?  @db.VarChar(32) @map("cel_phn") // 휴대전화
 
   // SHARE
   // useYn  String @db.Char(1) @default("Y") @map("use_yn")// 사용여부 => 사용자에 정의됨
@@ -90,7 +82,8 @@ model CmnRoleRltn{
   mdfrId  String @db.VarChar(64) @default("SYSTEM") @map("mdfr_id") // 수정자아이디
   mdfcDate  DateTime  @updatedAt @db.Timestamptz(3) @map("mdfc_date")// 수정일
 
-  @@unique([grpId, rolId]) // 공통 롤 관계
+  @@unique([grpId, rolId])
+  @@map("cmn_role_rltn") // 공통 롤 관계
 }
 
 model CmnRole{
@@ -134,17 +127,3 @@ model CmnRolGrp{
 
   @@map("cmn_rol_grp") // 공통 롤 그룹
 }
-
-```
-
-`[그림 2 : 테이블 ERD]`
-
-vscode 에서 `prisma generate UML` 플러그인을 설치하면 ERD를 생성할 수 있다
-
-![table : cmn_user](images/02-03.png)
-
-## 참조링크
-
-- [PER-DB_MODELING](https://docs.google.com/spreadsheets/d/1WGvfLKJqnhiqzotDG_pZtTsafIikOlcWGp0XOdLn8Ao/edit?usp=sharing)
-- [postgresql : datatype](https://www.postgresql.org/docs/current/datatype.html)
-- [ERD - 권한 관리를 위한 테이블 구조](https://popoman.tistory.com/21)

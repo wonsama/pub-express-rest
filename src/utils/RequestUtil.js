@@ -1,7 +1,8 @@
-const DEFAULT_TAKE = parseInt(process.env.DEFAULT_TAKE || '10');
-const MAX_TAKE = parseInt(process.env.MAX_TAKE || '10000'); // 너무많이 가져오지 않도록 제한
+import { decodeJwt } from "../servcices/authService.js";
+import { parseN } from "./NumberUtil.js";
 
-import { parseN } from './NumberUtil.js';
+const DEFAULT_TAKE = parseN(process.env.DEFAULT_TAKE, 10);
+const MAX_TAKE = parseN(process.env.MAX_TAKE, 10000); // 너무많이 가져오지 않도록 제한
 
 export function addContainsWhere(where, id, params) {
   if (params != null && params[id] != null) {
@@ -22,6 +23,26 @@ export function dynamicWhere(ids, params) {
     }
   }
   return where;
+}
+
+export function dynamicData(ids, params) {
+  // equal 만 처리한다. 위 메소드 호출 후 아래에서 정의한다 ( in, like 등 )
+  // where.mail = { contains: 'naver.com'}
+  // where.age = { gte: 20 }
+  const data = {};
+  for (const id of ids) {
+    // 있는것만 설정
+    if (params[id] != null) {
+      data[id] = params[id];
+    }
+  }
+
+  // id 값 기준으로 수정자 정보 업데이트 추가
+  if (params.id) {
+    data["mdfrId"] = params.id;
+  }
+
+  return data;
 }
 
 export function createWhere(ids, params) {
@@ -69,16 +90,30 @@ export function createData(ids, params) {
   return data;
 }
 
-export function createPage(page = 0, per = DEFAULT_TAKE) {
-  page = parseN(page);
-  const take = parseN(per);
-
-  console.log(page);
+export function createPage(page, per) {
+  page = parseN(page, 0);
+  per = parseN(per, DEFAULT_TAKE);
 
   if (page == 0) {
     // MAX_TAKE 많큼 가져오도록 처리한다
     return { take: MAX_TAKE, skip: 0 };
   }
   const skip = (page - 1) * per;
-  return { take, skip };
+  return { take: per, skip };
+}
+
+export async function getToken(req) {
+  // 이 메소드를 호출하기 위해서는 반드시 인증 middleware 를 통과해야 한다
+  const authorization = req.headers.authorization; // Bearer token
+  const token = authorization.split(" ")[1];
+
+  return token;
+}
+
+export async function getDecode(req, isRefresh = false) {
+  // 이 메소드를 호출하기 위해서는 반드시 인증 middleware 를 통과해야 한다
+  const token = getToken(req);
+  const decode = await decodeJwt(token, isRefresh);
+
+  return decode;
 }

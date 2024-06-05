@@ -1,12 +1,16 @@
-import { NODE_ENV, ROOT_DIR, SERVER_PORT } from "./config/config.js";
+import {
+  NODE_ENV,
+  ROOT_DIR,
+  SERVER_HOST,
+  SERVER_PORT,
+  SERVER_PROTOCOL,
+} from "./config/config.js";
 import { authRoutes, roleRoutes, userRoutes } from "./routes/index.js";
 import { error404Handler, errorHandler } from "./middleware/errorMiddleware.js";
 
 import { errorPrismaHandler } from "./middleware/prismaMiddleware.js";
 import express from "express";
 import path from "path";
-
-// import userRoutes from "./routes/userRoutes.js";
 
 // Initialize Express
 const app = express();
@@ -29,5 +33,7 @@ app.use(errorHandler);
 // Start Server
 app.listen(SERVER_PORT, () => {
   console.log(`NODE_ENV: ${NODE_ENV}`);
-  console.log(`server started at : http://localhost:${SERVER_PORT}`);
+  console.log(
+    `server started at : ${SERVER_PROTOCOL}://${SERVER_HOST}:${SERVER_PORT}`
+  );
 });

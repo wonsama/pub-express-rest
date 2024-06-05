@@ -19,6 +19,7 @@ model CmnUser {
 
   // REF
   cmnUserPrfl CmnUserPrfl? @relation("CmnUser_1_CmnUserPrfl_1")
+  cmnUserRole CmnUserRole[] @relation(name:"CmnUser_1_CmnUserRole_N")
 
   // FIELDS
   mail  String  @db.VarChar(64) @unique // 이메일, 유니크
@@ -38,20 +39,20 @@ model CmnUser {
 model CmnUserPrfl {
 
   // PK
-  userId    String  @id @db.VarChar(64) // 아이디, UUID = 36자리
-  cmnUser CmnUser @relation(name:"CmnUser_1_CmnUserPrfl_1", fields: [userId], references: [id]) // 공통 사용자
+  id    String  @id @default(uuid())  @db.VarChar(64) // 아이디, UUID = 36자리
 
   // REF
-  roleRltnId String? @db.VarChar(64) @map("role_rltn_id")// 롤관계아이디
-  cmnRoleRltn CmnRoleRltn? @relation("CmnUserPrfl_1_CmnRoleRltn_1")
+  // roleRltnId String? @db.VarChar(64) @map("role_rltn_id")// 롤관계아이디
+  // cmnRoleRltn CmnRoleRltn? @relation("CmnUserPrfl_1_CmnRoleRltn_1")
+  userId    String  @unique @db.VarChar(64) // 아이디, UUID = 36자리
+  cmnUser CmnUser @relation(name:"CmnUser_1_CmnUserPrfl_1", fields: [userId], references: [id]) // 공통 사용자
 
   // FIELDS
   name  String?  @db.VarChar(32)  // 이름
-  nickName  String?  @db.VarChar(32)  @map("nick_name") // 닉네임
+  nickName  String?  @db.VarChar(64)  @map("nick_name") // 닉네임
   celPhn  String?  @db.VarChar(32) @map("cel_phn") // 휴대전화
 
   // SHARE
-  // useYn  String @db.Char(1) @default("Y") @map("use_yn")// 사용여부 => 사용자에 정의됨
   rgstId  String @db.VarChar(64) @default("SYSTEM") @map("rgst_id")// 등록자아이디
   rgstDate DateTime  @default(now()) @db.Timestamptz(3) @map("rgst_date") // 등록일
   mdfrId  String @db.VarChar(64) @default("SYSTEM") @map("mdfr_id") // 수정자아이디
@@ -60,19 +61,16 @@ model CmnUserPrfl {
   @@map("cmn_user_prfl") // 공통 사용자 프로필
 }
 
-model CmnRoleRltn{
+
+model CmnPrms{
   // PK
   id    String  @id @default(uuid())  @db.VarChar(64) // 아이디, UUID = 36자리
 
   // REF
-  grpId    String  @db.VarChar(64) @map("grp_id")// 그룹 아이디
-  cmnRolGrp CmnRolGrp     @relation(name:"CmnRolGrp_1_CmnRoleRltn_N", fields: [grpId], references: [id])
-  rolId    String  @db.VarChar(64) @map("rol_id")// 롤 아이디
-  cmnRole CmnRole     @relation(name:"CmnRole_1_CmnRoleRltn_N", fields: [rolId], references: [id])
-
-  cmnUserPrfl CmnUserPrfl @relation("CmnUserPrfl_1_CmnRoleRltn_1", fields: [id], references: [userId]) // 공통 사용자 프로필
+  cmnRolePrms CmnRolePrms[] @relation(name:"CmnPrms_1_CmnRolePrms_N")
 
   // FIELDS
+  kywr  String  @db.VarChar(32)  @unique// 키워드
   xpln  String  @db.VarChar(2048)  @default("") // 설명
 
   // SHARE
@@ -82,8 +80,7 @@ model CmnRoleRltn{
   mdfrId  String @db.VarChar(64) @default("SYSTEM") @map("mdfr_id") // 수정자아이디
   mdfcDate  DateTime  @updatedAt @db.Timestamptz(3) @map("mdfc_date")// 수정일
 
-  @@unique([grpId, rolId])
-  @@map("cmn_role_rltn") // 공통 롤 관계
+  @@map("cmn_prms") // 공통 허가
 }
 
 model CmnRole{
@@ -91,7 +88,8 @@ model CmnRole{
   id    String  @id @default(uuid())  @db.VarChar(64) // 아이디, UUID = 36자리
 
   // REF
-  cmnRoleRltn CmnRoleRltn[] @relation(name:"CmnRole_1_CmnRoleRltn_N")
+  cmnRolePrms CmnRolePrms[] @relation(name:"CmnRole_1_CmnRolePrms_N")
+  cmnUserRole CmnUserRole[] @relation(name:"CmnRole_1_CmnUserRole_N")
 
   // FIELDS
   kywr  String  @db.VarChar(32)  @unique// 키워드
@@ -107,23 +105,51 @@ model CmnRole{
   @@map("cmn_role") // 공통 롤
 }
 
-model CmnRolGrp{
+
+
+model CmnRolePrms{
   // PK
   id    String  @id @default(uuid())  @db.VarChar(64) // 아이디, UUID = 36자리
 
   // REF
-  cmnRoleRltn CmnRoleRltn[] @relation(name:"CmnRolGrp_1_CmnRoleRltn_N")
+  roleId    String  @db.VarChar(64) @map("role_id")// 롤 아이디
+  cmnRole CmnRole     @relation(name:"CmnRole_1_CmnRolePrms_N", fields: [roleId], references: [id])
+  prmsId    String  @db.VarChar(64) @map("prms_id")// 퍼미션(허가)  아이디
+  cmnPrms CmnPrms     @relation(name:"CmnPrms_1_CmnRolePrms_N", fields: [prmsId], references: [id])
+
+  // cmnUserPrfl CmnUserPrfl @relation("CmnUserPrfl_1_CmnRoleRltn_1", fields: [id], references: [userId]) // 공통 사용자 프로필
 
   // FIELDS
-  kywr  String  @db.VarChar(32)  @unique// 키워드
   xpln  String  @db.VarChar(2048)  @default("") // 설명
 
   // SHARE
-  useYn  String @db.Char(1) @default("Y") @map("use_yn")// 사용여부
   rgstId  String @db.VarChar(64) @default("SYSTEM") @map("rgst_id")// 등록자아이디
   rgstDate DateTime  @default(now()) @db.Timestamptz(3) @map("rgst_date") // 등록일
   mdfrId  String @db.VarChar(64) @default("SYSTEM") @map("mdfr_id") // 수정자아이디
   mdfcDate  DateTime  @updatedAt @db.Timestamptz(3) @map("mdfc_date")// 수정일
 
-  @@map("cmn_rol_grp") // 공통 롤 그룹
+  @@unique([roleId, prmsId])
+  @@map("cmn_role_prms") // 공통 롤 허가
+}
+
+model CmnUserRole{
+  // PK
+  id    String  @id @default(uuid())  @db.VarChar(64) // 아이디, UUID = 36자리
+
+  // REF
+  userId    String  @db.VarChar(64) @map("user_id")// 사용자  아이디
+  cmnUser CmnUser     @relation(name:"CmnUser_1_CmnUserRole_N", fields: [userId], references: [id])
+  roleId    String  @db.VarChar(64) @map("role_id")// 롤 아이디
+  cmnRole CmnRole     @relation(name:"CmnRole_1_CmnUserRole_N", fields: [roleId], references: [id])
+  
+  // FIELDS
+
+  // SHARE
+  rgstId  String @db.VarChar(64) @default("SYSTEM") @map("rgst_id")// 등록자아이디
+  rgstDate DateTime  @default(now()) @db.Timestamptz(3) @map("rgst_date") // 등록일
+  mdfrId  String @db.VarChar(64) @default("SYSTEM") @map("mdfr_id") // 수정자아이디
+  mdfcDate  DateTime  @updatedAt @db.Timestamptz(3) @map("mdfc_date")// 수정일
+
+  @@unique([userId, roleId])
+  @@map("cmn_user_role") // 공통 사용자 롤
 }
