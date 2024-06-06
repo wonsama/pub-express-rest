@@ -5,14 +5,10 @@ const DEFAULT_TAKE = parseN(process.env.DEFAULT_TAKE, 10);
 const MAX_TAKE = parseN(process.env.MAX_TAKE, 10000); // 너무많이 가져오지 않도록 제한
 
 // ! WHERE ========================================
-export function createWhere(ids, params, onlyExist = true) {
+export function createWhere(ids, params) {
   const where = {};
   for (const id of ids) {
-    if (onlyExist) {
-      if (params[id] != null) {
-        where[id] = params[id];
-      }
-    } else {
+    if (Object.keys(params).filter((key) => key === id).length > 0) {
       where[id] = params[id];
     }
   }
@@ -20,7 +16,7 @@ export function createWhere(ids, params, onlyExist = true) {
 }
 
 export function containsWhere(where, id, params) {
-  if (params != null && params[id] != null) {
+  if (Object.keys(params).filter((key) => key === id).length > 0) {
     where[id] = { contains: params[id] };
   }
   return where;
@@ -52,38 +48,32 @@ export function subSelect(select, target, ids) {
 }
 
 // ! DATA ========================================
-export function createData(ids, params, onlyExist = false) {
+export function createData(ids, params) {
+  if (Array.isArray(ids)) {
+    ids.push("rgstId");
+    ids.push("mdfrId");
+  }
   const data = {};
   for (const id of ids) {
-    if (!onlyExist) {
+    if (Object.keys(params).filter((key) => key === id).length > 0) {
       data[id] = params[id];
-    } else {
-      if (params[id] != null) {
-        data[id] = params[id];
-      }
     }
   }
   return data;
 }
 
-export function subData(data, target, ids, params, onlyExist = false) {
-  if (target == null) {
-    throw new Error(`target is null`);
+export function subData(data, target, ids, params) {
+  if (Array.isArray(ids)) {
+    ids.push("rgstId");
+    ids.push("mdfrId");
   }
   data[target] = {
     create: {},
   };
-
   const _target = data[target].create;
-
   for (const id of ids) {
-    // 없으면 없는데로 설정
-    if (!onlyExist) {
+    if (Object.keys(params).filter((key) => key === id).length > 0) {
       _target[id] = params[id];
-    } else {
-      if (params[id] != null) {
-        _target[id] = params[id];
-      }
     }
   }
   return data;
@@ -103,7 +93,7 @@ export function createPage(page, per) {
 }
 
 // ! AUTH ========================================
-export async function getToken(req) {
+export function getToken(req) {
   // 이 메소드를 호출하기 위해서는 반드시 인증 middleware 를 통과해야 한다
   const authorization = req.headers.authorization; // Bearer token
   const token = authorization.split(" ")[1];
@@ -114,7 +104,9 @@ export async function getToken(req) {
 export async function getDecode(req, isRefresh = false) {
   // 이 메소드를 호출하기 위해서는 반드시 인증 middleware 를 통과해야 한다
   const token = getToken(req);
+  // console.log("token", token);
   const decode = await decodeJwt(token, isRefresh);
+  // console.log("decode", decode);
 
   return decode;
 }

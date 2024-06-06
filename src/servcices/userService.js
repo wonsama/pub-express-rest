@@ -17,6 +17,8 @@ import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
 export async function insertUser(params) {
+  console.log("params", params);
+
   const select = createSelect(["id", "mail", "useYn", "rfrsTkn"]);
   subSelect(select, "cmnUserPrfl", ["name", "nickName", "celPhn"]);
 
@@ -62,7 +64,7 @@ export async function updateUser(params) {
   if (id == null) {
     throw new Error("id is required");
   }
-  const data = createData(["mail", "useYn", "rfrsTkn"], params, true);
+  const data = createData(["mail", "useYn", "rfrsTkn"], params);
 
   return prisma.cmnUser.update({
     where: { id },

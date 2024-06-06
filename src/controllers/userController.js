@@ -50,8 +50,18 @@ export async function postUser(req, res, next) {
       return resErrJson(res, "mail already exists");
     }
 
+    console.log("req.user.id", req.user.id);
+
     // 2. db query : 사용자 등록
-    const cmnUser = await insertUser({ mail, pswr, name, nickName, celPhn });
+    const cmnUser = await insertUser({
+      mail,
+      pswr,
+      name,
+      nickName,
+      celPhn,
+      rgstId: req.user.id,
+      mdfrId: req.user.id,
+    });
 
     // 3. response
     resJson(res, cmnUser, 201);

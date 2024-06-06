@@ -81,23 +81,20 @@ export async function postToken(req, res, next) {
 // O
 export async function postLogout(req, res, next) {
   // 1. param
-  const token = getToken(req);
   const decode = await getDecode(req);
 
-  let count = 0;
   try {
-    // 2. db query : refresh token 존재여부 확인
-    count = await selectUserCount({ id: decode.id, rfrsTkn: token });
-    if (count > 0) {
-      // 2. db query : refresh token 이 제거 되지 않은 경우에만 제거
-      await updateUserTokenRefresh(decode.id, null);
-    }
+    // 2. db query : refresh token 제거
+    await updateUser({ id: decode.id, rfrsTkn: null });
+
+    // 2. db query : 사용자 정보 확인
+    const user = await selectUserUnique({ id: decode.id });
+
+    // 3. response
+    resJson(res, { logout: user.mail });
   } catch (e) {
     return next(e);
   }
-
-  // 3. response
-  resJson(res, { logout: decode.mail });
 }
 
 // O
@@ -108,7 +105,6 @@ export async function getMe(req, res, next) {
   try {
     // 2. db query : select user
     const cmnUser = await selectUser({ id: decode.id });
-
     // 3. response
     resJson(res, cmnUser);
   } catch (e) {

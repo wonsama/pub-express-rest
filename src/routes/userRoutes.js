@@ -1,5 +1,6 @@
 import { getUsers, postUser } from "../controllers/userController.js";
 
+import { authenticateAccessJWT } from "../middleware/authenticationMiddleware.js";
 import express from "express";
 
 const router = express.Router();
@@ -10,10 +11,10 @@ const router = express.Router();
 // router.get("/:id", getUserById);
 
 // GET /api/user, 모든 사용자 정보를 가져온다.
-router.get("/", getUsers);
+router.get("/", authenticateAccessJWT, getUsers);
 
 // POST /api/user, 사용자 정보를 생성한다.
-router.post("/", postUser);
+router.post("/", authenticateAccessJWT, postUser);
 
 // PUT /api/user/:id
 // router.put('/:id', userController.updateUser);
