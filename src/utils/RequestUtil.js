@@ -81,11 +81,39 @@ export function addSubSelect(select, target, ids) {
   return select;
 }
 
-export function createData(ids, params) {
+export function createData(ids, params, onlyExist = false) {
   const data = {};
   for (const id of ids) {
+    if (!onlyExist) {
+      data[id] = params[id];
+    } else {
+      if (params[id] != null) {
+        data[id] = params[id];
+      }
+    }
+  }
+  return data;
+}
+
+export function addSubData(data, target, ids, params, onlyExist = false) {
+  if (target == null) {
+    throw new Error(`target is null`);
+  }
+  data[target] = {
+    create: {},
+  };
+
+  const _target = data[target].create;
+
+  for (const id of ids) {
     // 없으면 없는데로 설정
-    data[id] = params[id];
+    if (!onlyExist) {
+      _target[id] = params[id];
+    } else {
+      if (params[id] != null) {
+        _target[id] = params[id];
+      }
+    }
   }
   return data;
 }

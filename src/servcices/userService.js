@@ -1,5 +1,7 @@
 import {
+  addSubData,
   addSubSelect,
+  createData,
   createSelect,
   dynamicData,
   dynamicWhere,
@@ -14,33 +16,20 @@ import bcrypt from "bcrypt";
 // 추가 접두사 : isValid, isExist, count, generate
 
 const prisma = new PrismaClient();
-const USER_SELECT_FIELDS = ["id", "mail", "useYn", "rfrsTkn"];
 
-export async function insertUser(req) {
-  const { mail, pswr } = req.body; // CmnUser, mandatory
-  const { name, nickName, celPhn } = req.body; // CmnUserPrfl, optional
+export async function insertUser(params) {
+  const select = createSelect(["id", "mail", "useYn", "rfrsTkn"]);
+  addSubSelect(select, "cmnUserPrfl", ["name", "nickName", "celPhn"]);
 
-  const hash = await bcrypt.hash(pswr, SALT_ROUNDS); // 비밀번호 암호화
+  // 요청 정보에 비밀번호 해시값 추가
+  const { pswr } = params;
+  const hash = await bcrypt.hash(pswr, SALT_ROUNDS);
+  params.hash = hash;
 
-  return prisma.cmnUser.create({
-    data: {
-      mail,
-      hash,
-      // 관계가 있는 경우 별도의 아이디를 생성하지 않아도 된다. (  userId: cmnUser.id )
-      cmnUserPrfl: {
-        create: { name, nickName, celPhn },
-      },
-    },
-    // create 를 한 경우에는 refresh token 값은 존재하지 않는다
-    select: {
-      mail: true,
-      useYn: true,
-      // rfrsTkn: true,
-      cmnUserPrfl: {
-        select: { name: true, nickName: true, celPhn: true },
-      },
-    },
-  });
+  const data = createData(["mail", "hash"], params);
+  addSubData(data, "cmnUserPrfl", ["name", "nickName", "celPhn"], params); // 관계가 있는 경우 별도의 아이디를 생성하지 않아도 된다. (  userId: cmnUser.id )
+
+  return prisma.cmnUser.create({ data, select });
 }
 
 export async function selectUser(params, fields) {
@@ -65,9 +54,7 @@ export async function selectUserUnique(params, fields) {
   if (users.length === 0) {
     return null;
   }
-  if (users.length > 1) {
-    throw new Error("user is not unique");
-  }
+  // 1 이상은 존재하지 않음, mail 에 unique 키가 걸려 있기 떄문
   return users[0];
 }
 
@@ -88,4 +75,24 @@ export async function selectUserCount(params) {
   const where = dynamicWhere(["id", "mail", "useYn", "rfrsTkn"], params);
 
   return prisma.cmnUser.count({ where });
+}
+
+export async function truncateUser() {
+  const NODE_ENV = process.env.NODE_ENV;
+
+  if (NODE_ENV == "local") {
+    let removedProfile = await prisma.cmnUserPrfl.deleteMany(); // 프로필 삭제 후
+    let removedUser = await prisma.cmnUser.deleteMany(); // 사용자 정보를 삭제
+
+    return {
+      removedProfile,
+      removedUser,
+      message: "clear all user data success",
+    };
+  }
+  return {
+    removedProfile: 0,
+    removedUser: 0,
+    message: "clear all user data fail, available in NODE_ENV='local' ",
+  };
 }

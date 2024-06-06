@@ -12,32 +12,33 @@ import { createPage } from "../utils/RequestUtil.js";
 
 export async function getUsers(req, res, next) {
   // 1. param
-  const { id, mail, useYn, rfrsTkn } = req.query; // 검색, optional
-  const { page, per } = req.query; // 페이지 1, optional
-  const { skip, take } = createPage(page, per); // 페이지 2, auto
+  const { id, mail, useYn, rfrsTkn } = req.query; // Search, optional
+  const { page, per } = req.query; // Page 1, optional
+  const { skip, take } = createPage(page, per); // Page 2, auto
 
-  // 2. db query
-  let items = null;
-  let counts = 0;
   try {
-    items = await selectUser({ id, mail, useYn, rfrsTkn, skip, take });
-    counts = await selectUserCount({ id, mail, useYn, rfrsTkn });
+    // 2. db query : 사용자 목록 조회 (페이징 처리)
+    const items = await selectUser({ id, mail, useYn, rfrsTkn, skip, take });
+
+    // 2. db query : 사용자 전체 카운트
+    const counts = await selectUserCount({ id, mail, useYn, rfrsTkn });
+
+    // 3. response
+    resListJson(res, items, {
+      take,
+      skip,
+      size: items.length,
+      total: counts,
+    });
   } catch (e) {
     return next(e);
   }
-
-  // 3. response
-  resListJson(res, items, {
-    take,
-    skip,
-    size: items.length,
-    total: counts,
-  });
 }
 
 export async function postUser(req, res, next) {
   // 1. param
   const { mail, pswr } = req.body; // CmnUser, mandatory
+  const { name, nickName, celPhn } = req.body; // CmnUserPrfl, optional
   if (mail == null || pswr == null) {
     return resErrJson(res, "mail, pswr required");
   }
@@ -48,13 +49,10 @@ export async function postUser(req, res, next) {
     if (count > 0) {
       return resErrJson(res, "mail already exists");
     }
-  } catch (e) {
-    return next(e);
-  }
 
-  // 2. db query : insert user
-  try {
-    const cmnUser = await insertUser(req);
+    // 2. db query : 사용자 등록
+    const cmnUser = await insertUser({ mail, pswr, name, nickName, celPhn });
+
     // 3. response
     resJson(res, cmnUser, 201);
   } catch (e) {

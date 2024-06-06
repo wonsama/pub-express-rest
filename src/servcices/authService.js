@@ -11,21 +11,6 @@ const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || "7d";
 // 기본 접두사 : insert, select, update, delete
 // 추가 접두사 : isValid, isExist, count, generate
 
-const prisma = new PrismaClient();
-
-export async function isValidUserLogin(mail, pswr) {
-  let user = await prisma.cmnUser.findUnique({
-    where: { mail },
-    select: { hash: true },
-  });
-
-  if (user == null) {
-    return false;
-  }
-
-  return bcrypt.compareSync(pswr, user.hash);
-}
-
 export function generateTokens(id) {
   // jwt.sign 을 통해 기록된 값은 decode 이후 payload 에서 확인 가능
   const accessToken = jwt.sign({ id }, ACCESS_TOKEN_SECRET, {
@@ -37,23 +22,6 @@ export function generateTokens(id) {
 
   return { accessToken, refreshToken };
 }
-
-// export async function updateUserTokenRefresh(id, rfrsTkn) {
-//   return prisma.cmnUser.update({
-//     where: { id },
-//     data: {
-//       rfrsTkn,
-//     },
-//   });
-// }
-
-// export async function isValidTokenRefresh(id, rfrsTkn) {
-//   let count = await prisma.cmnUser.count({
-//     where: { id, rfrsTkn },
-//   });
-
-//   return count > 0;
-// }
 
 export async function decodeJwt(token, isRefresh = true) {
   return new Promise((resolve, reject) => {
