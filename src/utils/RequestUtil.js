@@ -4,59 +4,29 @@ import { parseN } from "./NumberUtil.js";
 const DEFAULT_TAKE = parseN(process.env.DEFAULT_TAKE, 10);
 const MAX_TAKE = parseN(process.env.MAX_TAKE, 10000); // 너무많이 가져오지 않도록 제한
 
-export function addContainsWhere(where, id, params) {
-  if (params != null && params[id] != null) {
-    where[id] = { contains: params[id] };
-  }
-  return where;
-}
-
-export function dynamicWhere(ids, params) {
-  // equal 만 처리한다. 위 메소드 호출 후 아래에서 정의한다 ( in, like 등 )
-  // where.mail = { contains: 'naver.com'}
-  // where.age = { gte: 20 }
+// ! WHERE ========================================
+export function createWhere(ids, params, onlyExist = true) {
   const where = {};
   for (const id of ids) {
-    // 있는것만 설정
-    if (params[id] != null) {
+    if (onlyExist) {
+      if (params[id] != null) {
+        where[id] = params[id];
+      }
+    } else {
       where[id] = params[id];
     }
   }
   return where;
 }
 
-export function dynamicData(ids, params) {
-  // equal 만 처리한다. 위 메소드 호출 후 아래에서 정의한다 ( in, like 등 )
-  // where.mail = { contains: 'naver.com'}
-  // where.age = { gte: 20 }
-  const data = {};
-  for (const id of ids) {
-    // 있는것만 설정
-    if (params[id] != null) {
-      data[id] = params[id];
-    }
-  }
-
-  // id 값 기준으로 수정자 정보 업데이트 추가
-  if (params.id) {
-    data["mdfrId"] = params.id;
-  }
-
-  return data;
-}
-
-export function createWhere(ids, params) {
-  const where = {};
-  for (const id of ids) {
-    // 모든 항목은 필수임 ( 없으면 에러 )
-    if (params[id] == null) {
-      throw new Error(`params.${id} is required`);
-    }
-    where[id] = params[id];
+export function containsWhere(where, id, params) {
+  if (params != null && params[id] != null) {
+    where[id] = { contains: params[id] };
   }
   return where;
 }
 
+// ! SELECT ========================================
 export function createSelect(ids) {
   const select = {};
   for (const id of ids) {
@@ -65,7 +35,7 @@ export function createSelect(ids) {
   return select;
 }
 
-export function addSubSelect(select, target, ids) {
+export function subSelect(select, target, ids) {
   if (target == null) {
     throw new Error(`target is null`);
   }
@@ -81,6 +51,7 @@ export function addSubSelect(select, target, ids) {
   return select;
 }
 
+// ! DATA ========================================
 export function createData(ids, params, onlyExist = false) {
   const data = {};
   for (const id of ids) {
@@ -95,7 +66,7 @@ export function createData(ids, params, onlyExist = false) {
   return data;
 }
 
-export function addSubData(data, target, ids, params, onlyExist = false) {
+export function subData(data, target, ids, params, onlyExist = false) {
   if (target == null) {
     throw new Error(`target is null`);
   }
@@ -118,6 +89,7 @@ export function addSubData(data, target, ids, params, onlyExist = false) {
   return data;
 }
 
+// ! PAGE ========================================
 export function createPage(page, per) {
   page = parseN(page, 0);
   per = parseN(per, DEFAULT_TAKE);
@@ -130,6 +102,7 @@ export function createPage(page, per) {
   return { take: per, skip };
 }
 
+// ! AUTH ========================================
 export async function getToken(req) {
   // 이 메소드를 호출하기 위해서는 반드시 인증 middleware 를 통과해야 한다
   const authorization = req.headers.authorization; // Bearer token

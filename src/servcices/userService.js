@@ -1,10 +1,9 @@
 import {
-  addSubData,
-  addSubSelect,
   createData,
   createSelect,
-  dynamicData,
-  dynamicWhere,
+  createWhere,
+  subData,
+  subSelect,
 } from "../utils/RequestUtil.js";
 
 import { PrismaClient } from "@prisma/client";
@@ -19,7 +18,7 @@ const prisma = new PrismaClient();
 
 export async function insertUser(params) {
   const select = createSelect(["id", "mail", "useYn", "rfrsTkn"]);
-  addSubSelect(select, "cmnUserPrfl", ["name", "nickName", "celPhn"]);
+  subSelect(select, "cmnUserPrfl", ["name", "nickName", "celPhn"]);
 
   // 요청 정보에 비밀번호 해시값 추가
   const { pswr } = params;
@@ -27,16 +26,16 @@ export async function insertUser(params) {
   params.hash = hash;
 
   const data = createData(["mail", "hash"], params);
-  addSubData(data, "cmnUserPrfl", ["name", "nickName", "celPhn"], params); // 관계가 있는 경우 별도의 아이디를 생성하지 않아도 된다. (  userId: cmnUser.id )
+  subData(data, "cmnUserPrfl", ["name", "nickName", "celPhn"], params); // 관계가 있는 경우 별도의 아이디를 생성하지 않아도 된다. (  userId: cmnUser.id )
 
   return prisma.cmnUser.create({ data, select });
 }
 
 export async function selectUser(params, fields) {
   const { take, skip } = params;
-  const where = dynamicWhere(["id", "mail", "useYn", "rfrsTkn"], params);
+  const where = createWhere(["id", "mail", "useYn", "rfrsTkn"], params);
   const select = createSelect(["id", "mail", "useYn", "rfrsTkn"]);
-  addSubSelect(select, "cmnUserPrfl", ["name", "nickName", "celPhn"]);
+  subSelect(select, "cmnUserPrfl", ["name", "nickName", "celPhn"]);
   const orderBy = { rgstDate: "desc" };
 
   return prisma.cmnUser.findMany({
@@ -63,7 +62,7 @@ export async function updateUser(params) {
   if (id == null) {
     throw new Error("id is required");
   }
-  const data = dynamicData(["mail", "useYn", "rfrsTkn"], params);
+  const data = createData(["mail", "useYn", "rfrsTkn"], params, true);
 
   return prisma.cmnUser.update({
     where: { id },
@@ -72,7 +71,7 @@ export async function updateUser(params) {
 }
 
 export async function selectUserCount(params) {
-  const where = dynamicWhere(["id", "mail", "useYn", "rfrsTkn"], params);
+  const where = createWhere(["id", "mail", "useYn", "rfrsTkn"], params);
 
   return prisma.cmnUser.count({ where });
 }

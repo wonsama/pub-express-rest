@@ -1,8 +1,8 @@
 import {
-  addContainsWhere,
+  containsWhere,
   createData,
   createSelect,
-  dynamicWhere,
+  createWhere,
 } from "../utils/RequestUtil.js";
 
 import { PrismaClient } from "@prisma/client";
@@ -12,8 +12,8 @@ const prisma = new PrismaClient();
 export async function selectRole(params, fields) {
   const { take, skip } = params;
   const select = createSelect(["id", "kywr", "xpln"]);
-  const where = dynamicWhere(["id", "kywr"], params);
-  addContainsWhere(where, "xpln", params);
+  const where = createWhere(["id", "kywr"], params);
+  containsWhere(where, "xpln", params);
 
   return prisma.cmnRole.findMany({
     where,
@@ -24,7 +24,7 @@ export async function selectRole(params, fields) {
 }
 
 export async function selectRoleCount(params) {
-  const where = dynamicWhere(["id", "kywr", "xpln"], params);
+  const where = createWhere(["id", "kywr", "xpln"], params);
 
   return prisma.cmnRole.count({ where });
 }
